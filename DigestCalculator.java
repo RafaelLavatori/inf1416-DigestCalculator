@@ -1,9 +1,100 @@
 import java.security.*;
 import javax.crypto.*;
 import java.io.*;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 // Generate a DigestCalculator
 public class DigestCalculator {
+    
+    //Cria arquivo xml 
+    private static void CreateXMLFileInJava () {
+        
+        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder dBuilder;
+        
+        try {
+            dBuilder = dbFactory.newDocumentBuilder();
+            Document doc = dBuilder.newDocument();
+            
+            // add elements to Document
+            Element rootElement = doc.createElement("CATALOG");
+            
+            // append root element to document
+            doc.appendChild(rootElement);
+
+            // append first child element to root element
+            rootElement.appendChild(createFile_EntryElement(doc, "name1", "MD5", "ffffeeee"));
+
+            // append second child
+            rootElement.appendChild(createFile_EntryElement(doc, "name2", "SHA256", "eeeeffff"));
+
+            // for output to file, console
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            
+            // for pretty print
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+            DOMSource source = new DOMSource(doc);
+
+            // write to console or file
+            StreamResult console = new StreamResult(System.out);
+            StreamResult file = new StreamResult(new File("list_digest.xml"));
+
+            // write data
+            transformer.transform(source, console);
+            transformer.transform(source, file);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    //Cria Uma FileEnrty
+    private static Node createFile_EntryElement(Document doc, String file_name, String tipo_digest, String digest_hex) {
+            
+        Element file_entry = doc.createElement("FILE_ENTRY");
+
+        // Cria file_name element
+        file_entry.appendChild(createFinalElements(doc, "FILE_NAME", file_name));
+
+        // Cria digest_entry element
+        file_entry.appendChild(createDigest_EntryElement(doc, tipo_digest, digest_hex));
+
+
+        return file_entry;
+    }
+    
+    //Cria Uma Digest Entry
+    private static Node createDigest_EntryElement(Document doc, String tipo_digest, String digest_hex) {
+            
+        Element digest_entry = doc.createElement("DIGEST_ENTRY");
+
+        // Cria tipo_digest element
+        digest_entry.appendChild(createFinalElements(doc, "DIGEST_TYPE", tipo_digest));
+
+        // Cria digest_hex element
+        digest_entry.appendChild(createFinalElements(doc, "DIGEST_HEX", digest_hex));
+
+
+        return digest_entry;
+    }
+
+    // Cria nó da arvore
+    private static Node createFinalElements(Document doc, String name, String value) {
+        Element node = doc.createElement(name);
+        node.appendChild(doc.createTextNode(value));
+        return node;
+    }
     
     private static void file_digest(String inputFile, String tipo_digest) throws Exception {
         try (
@@ -41,6 +132,9 @@ public class DigestCalculator {
         
     }
     public static void main (String[] args) throws Exception {
+        
+        //Cria arquivo xml no formato especificado
+        CreateXMLFileInJava();
         
         //check args
         if (args.length != 4) {
