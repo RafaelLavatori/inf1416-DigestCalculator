@@ -61,29 +61,24 @@ public class DigestCalculator {
         String directory_path = args[1];
         String xml_path = args[2];
 
-        XmlHandler xml_handler = new XmlHandler(xml_path);
-        
         File fObj = new File(directory_path);
-        if(fObj.exists() && fObj.isDirectory()){
-            
-            File a[] = fObj.listFiles();
-            
-            for(File arquivo : a){
-                System.out.println("\n" + arquivo.getPath());
-                
-                String inputFile = arquivo.getPath();
-
-                String digest = file_digest(inputFile, digest_type);
-                XmlHandler.Status file_status = xml_handler.queryFileDigest(arquivo.getName(), digest_type, digest);
-                
-                System.out.println(String.format("%s %s %s (%s)",arquivo.getName(),digest_type,digest,file_status));
-            }
-
-            xml_handler.SaveFile();
-        }
-        else{
-            System.err.println("O caminho indicado não é um diretório.");
+        if (!fObj.exists() || !fObj.isDirectory()) {
+            System.err.println("O caminho da pasta indicado não é um diretório.");
             System.exit(3);
         }
+
+        XmlHandler xml_handler = new XmlHandler(xml_path);           
+        File a[] = fObj.listFiles();
+        
+        for(File arquivo : a){                
+            String inputFile = arquivo.getPath();
+
+            String digest = file_digest(inputFile, digest_type);
+            XmlHandler.Status file_status = xml_handler.queryFileDigest(arquivo.getName(), digest_type, digest);
+            
+            System.out.println(String.format("%s %s %s (%s)",arquivo.getName(),digest_type,digest,file_status));
+        }
+
+        xml_handler.SaveFile();
     }
 }

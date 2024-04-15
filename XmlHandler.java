@@ -126,15 +126,11 @@ public class XmlHandler {
 
             Element file_entry = GetFileEntry(file_name);
             if (file_entry != null) {
-                System.out.println("File entry found in catalog");
-
                 XPath xPath = XPathFactory.newInstance().newXPath();
                 String expression = String.format("//FILE_ENTRY[child::FILE_NAME[text()='%s']]/DIGEST_ENTRY[child::DIGEST_TYPE[text()='%s']]",file_name,digest_type);
                 NodeList digestQueryResult = (NodeList) xPath.compile(expression).evaluate(file_entry, XPathConstants.NODESET);
 
                 if (digestQueryResult.getLength() == 0) {
-                    System.out.println("Digest not found in catalog");
-
                     // new digest type for the given file
                     // create digest entry
                     Element digest_entry_node = createDigestEntry(digest_type, file_digest);
@@ -146,14 +142,10 @@ public class XmlHandler {
                 Element digestEntry = (Element) digestQueryResult.item(0);
                 String catalogFileDigest = digestEntry.getElementsByTagName("DIGEST_HEX").item(0).getTextContent();
 
-                System.out.println(String.format("Digest found in catalog: %s", catalogFileDigest));
-
                 if (catalogFileDigest.equals(file_digest)) return Status.OK;
                 else return Status.NOT_OK;
 
             } else {
-                System.out.println("File entry not found in catalog");
-                
                 // no original file entry found
                 // create file entry
                 Element root = xml_catalog.getDocumentElement();
