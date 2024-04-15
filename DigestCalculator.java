@@ -1,38 +1,25 @@
 import java.security.*;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
-// Generate a DigestCalculator
 public class DigestCalculator {
-    private static String file_digest(String inputFile, String tipo_digest) throws Exception {
-        try (
-            InputStream inputStream = new FileInputStream(inputFile);
-        ) {
-            long fileSize = new File(inputFile).length();
-            byte[] allBytes = new byte[(int) fileSize];
-         
-            // int bytesRead = inputStream.read(allBytes);
-            //imprime os bytes lidos do arquivo        
-            //for(int i =0; i<(int) fileSize; i++){
-                //System.out.println(allBytes[i]);    
-            //}
-            
+    // Calculate digest of a file
+    private static String file_digest(String file_path, String tipo_digest) throws Exception {
+        try {         
             MessageDigest messageDigest = MessageDigest.getInstance(tipo_digest);
-            // System.out.println( "\n" + messageDigest.getProvider().getInfo() );
-            messageDigest.update(allBytes);
+            byte[] data = Files.readAllBytes(Paths.get(file_path));
+            messageDigest.update(data);
+
             byte [] digest = messageDigest.digest();
-            // System.out.println( "\nDigest length: " + digest.length * 8 + "bits" );
             
             StringBuffer buf = new StringBuffer();
             for(int i = 0; i < digest.length; i++) {
                 String hex = Integer.toHexString(0x0100 + (digest[i] & 0x00FF)).substring(1);
                 buf.append((hex.length() < 2 ? "0" : "") + hex);
-            }     
+            }
             
             String digest_string = buf.toString();
-
-            // imprime o digest em hexadecimal
-            // System.out.println( "\nDigest(hex): " );
-            // System.out.println(digest);
             return digest_string;
 
         } catch (IOException ex) {
