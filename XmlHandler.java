@@ -1,6 +1,5 @@
 import java.io.*;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
@@ -27,6 +26,9 @@ public class XmlHandler {
         File f = new File(catalog_path);
         try {
             if (f.exists() && !f.isDirectory()) { 
+                // read from existing XML catalog
+                xml_catalog = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(f);
+            } else {
                 // XML catalog does not exist => create it
                 Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
                 
@@ -34,9 +36,6 @@ public class XmlHandler {
                 doc.appendChild(doc.createElement("CATALOG"));
 
                 xml_catalog = doc;
-            } else {
-                // read from existing XML catalog
-                xml_catalog = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(f);
             }
 
         } catch (Exception e) {
@@ -52,16 +51,16 @@ public class XmlHandler {
             Transformer transformer = transformerFactory.newTransformer();
 
             // for pretty print
-            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+            // transformer.setOutputProperty(OutputKeys.INDENT, "yes");
             DOMSource source = new DOMSource(xml_catalog);
 
-            // write to console or file
-            StreamResult console = new StreamResult(System.out);
+            // write to file
             StreamResult file = new StreamResult(new File(catalog_path));
-
-            // write data
-            transformer.transform(source, console);
             transformer.transform(source, file);
+
+            // write to console
+            // StreamResult console = new StreamResult(System.out);
+            //  transformer.transform(source, console);
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -72,10 +71,11 @@ public class XmlHandler {
     // used when adding new digest codes when they're not found in the catalog
     private Element GetFileEntry(String file_name) throws Exception {
         XPath xPath = XPathFactory.newInstance().newXPath();
-        String expression = String.format("/CATALOG/FILE_ENTRY[child::FILE_NAME[text()='%s']]",file_name);
+        String expression = String.format("//FILE_ENTRY[child::FILE_NAME[text()='%s']]",file_name);
 
         // query for existing entry
         NodeList nodeList = (NodeList) xPath.compile(expression).evaluate(xml_catalog, XPathConstants.NODESET);
+
         if (nodeList.getLength()>0) return (Element) nodeList.item(0); // return existing entry
         return null;
     }
@@ -103,18 +103,17 @@ public class XmlHandler {
     // checks if there is digest collision
     // returns True if there is, False if there isn't
     private boolean checkDigestCollision(String file_name, String digest_type, String file_digest) throws Exception {
-        // query entries by digest
+        // query file names by digest
         XPath xPath = XPathFactory.newInstance().newXPath();
-        String expression = String.format("/CATALOG/FILE_ENTRY/DIGEST_ENTRY[child::DIGEST_HEX[text()='%s']]",file_digest);
-        NodeList fileEntriesQueryResult = (NodeList) xPath.compile(expression).evaluate(xml_catalog, XPathConstants.NODESET);
+        String expression = String.format("//FILE_ENTRY[descendant::DIGEST_HEX[text()='%s']]/FILE_NAME",file_digest);
+        NodeList fileNamesQueryResult = (NodeList) xPath.compile(expression).evaluate(xml_catalog, XPathConstants.NODESET);
 
         // obvious cases
-        if (fileEntriesQueryResult.getLength() == 0) return false;
-        if (fileEntriesQueryResult.getLength() > 1) return true;
+        if (fileNamesQueryResult.getLength() == 0) return false;
+        if (fileNamesQueryResult.getLength() > 1) return true;
 
         // checking if the one result is the file itself or some other
-        Element file_entry = (Element) fileEntriesQueryResult.item(0);
-        String catalog_file_name = file_entry.getElementsByTagName("FILE_NAME").item(0).getNodeValue();
+        String catalog_file_name = fileNamesQueryResult.item(0).getTextContent();
 
         // if the catalog file name is different, there is a collision
         return !catalog_file_name.equals(file_name);
@@ -127,11 +126,15 @@ public class XmlHandler {
 
             Element file_entry = GetFileEntry(file_name);
             if (file_entry != null) {
+                System.out.println("File entry found in catalog");
+
                 XPath xPath = XPathFactory.newInstance().newXPath();
-                String expression = String.format("/DIGEST_ENTRY[child::DIGEST_TYPE[text()='%s']]",digest_type);
+                String expression = String.format("//FILE_ENTRY[child::FILE_NAME[text()='%s']]/DIGEST_ENTRY[child::DIGEST_TYPE[text()='%s']]",file_name,digest_type);
                 NodeList digestQueryResult = (NodeList) xPath.compile(expression).evaluate(file_entry, XPathConstants.NODESET);
 
                 if (digestQueryResult.getLength() == 0) {
+                    System.out.println("Digest not found in catalog");
+
                     // new digest type for the given file
                     // create digest entry
                     Element digest_entry_node = createDigestEntry(digest_type, file_digest);
@@ -141,12 +144,16 @@ public class XmlHandler {
                 }
 
                 Element digestEntry = (Element) digestQueryResult.item(0);
-                String catalogFileDigest = digestEntry.getElementsByTagName("DIGEST_HEX").item(0).getNodeValue();
+                String catalogFileDigest = digestEntry.getElementsByTagName("DIGEST_HEX").item(0).getTextContent();
+
+                System.out.println(String.format("Digest found in catalog: %s", catalogFileDigest));
 
                 if (catalogFileDigest.equals(file_digest)) return Status.OK;
                 else return Status.NOT_OK;
 
             } else {
+                System.out.println("File entry not found in catalog");
+                
                 // no original file entry found
                 // create file entry
                 Element root = xml_catalog.getDocumentElement();

@@ -17,10 +17,10 @@ public class DigestCalculator {
             //}
             
             MessageDigest messageDigest = MessageDigest.getInstance(tipo_digest);
-            System.out.println( "\n" + messageDigest.getProvider().getInfo() );
+            // System.out.println( "\n" + messageDigest.getProvider().getInfo() );
             messageDigest.update(allBytes);
             byte [] digest = messageDigest.digest();
-            System.out.println( "\nDigest length: " + digest.length * 8 + "bits" );
+            // System.out.println( "\nDigest length: " + digest.length * 8 + "bits" );
             
             StringBuffer buf = new StringBuffer();
             for(int i = 0; i < digest.length; i++) {
@@ -31,8 +31,8 @@ public class DigestCalculator {
             String digest_string = buf.toString();
 
             // imprime o digest em hexadecimal
-            System.out.println( "\nDigest(hex): " );
-            System.out.println(digest);
+            // System.out.println( "\nDigest(hex): " );
+            // System.out.println(digest);
             return digest_string;
 
         } catch (IOException ex) {
