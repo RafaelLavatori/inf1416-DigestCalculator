@@ -2,6 +2,9 @@ import java.security.*;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Vector;
 
 public class DigestCalculator {
     // Calculate digest of a file
@@ -28,6 +31,30 @@ public class DigestCalculator {
         }
         
     }
+    
+    private static Vector<String> check_colision_files(Map<String,String>map_file_digest) {
+        
+        Vector<String> colision_equal_files = new Vector<>();
+        
+        for(String key1 : map_file_digest.keySet()){
+            String value1 = map_file_digest.get(key1);
+            
+            for(String key2 : map_file_digest.keySet()){
+                String value2 = map_file_digest.get(key2);
+                if(!key1.equals(key2) && value1.equals(value2)){
+                    if(!colision_equal_files.contains(key1)){
+                        colision_equal_files.add(key1);
+                    } 
+                    if(!colision_equal_files.contains(key2)){
+                        colision_equal_files.add(key2);
+                    } 
+                }
+            }
+            
+        }
+        return colision_equal_files;
+    }
+
     public static void main (String[] args) throws Exception {
 
         //check args
@@ -55,17 +82,39 @@ public class DigestCalculator {
         }
 
         XmlHandler xml_handler = new XmlHandler(xml_path);           
-        File a[] = fObj.listFiles();
+        File list_arq[] = fObj.listFiles();
         
-        for(File arquivo : a){                
+        Map<String, String> map_file_digest = new HashMap<>();
+        
+        for(File arquivo : list_arq){ 
             String inputFile = arquivo.getPath();
 
             String digest = file_digest(inputFile, digest_type);
-            XmlHandler.Status file_status = xml_handler.queryFileDigest(arquivo.getName(), digest_type, digest);
             
-            System.out.println(String.format("%s %s %s (%s)",arquivo.getName(),digest_type,digest,file_status));
+            map_file_digest.put(inputFile, digest);
+            
+            //XmlHandler.Status file_status = xml_handler.queryFileDigest(arquivo.getName(), digest_type, digest);
+            
+            //System.out.println(String.format("%s %s %s (%s)",arquivo.getName(),digest_type,digest,file_status));
         }
-
+        
+        Vector<String> colision_equal_files = check_colision_files(map_file_digest);
+        
+        for(File arquivo : list_arq){
+            
+            String inputFile = arquivo.getPath();
+            String digest = file_digest(inputFile, digest_type);
+            
+            if(colision_equal_files.contains(inputFile)){
+                System.out.println(String.format("%s %s %s (%s)",arquivo.getName(),digest_type,digest,"COLISION"));
+            }
+            else{
+                XmlHandler.Status file_status = xml_handler.queryFileDigest(arquivo.getName(), digest_type, digest);
+                System.out.println(String.format("%s %s %s (%s)",arquivo.getName(),digest_type,digest,file_status));
+            }
+        }
+        
         xml_handler.SaveFile();
+        
     }
 }

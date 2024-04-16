@@ -1,3 +1,11 @@
+/*
+Trabalho 2 inf1416 - DigestCalculator
+
+Nome: Rafael Lavatori Caetano de Bastos  Matrícula: 2010818
+Nome: João Couto       Matrícula: 2010798
+
+*/
+
 import java.io.*;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.Transformer;
