@@ -6,6 +6,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
 
+/*
+Trabalho 2 INF1416 - DigestCalculator
+
+Nome: Rafael Lavatori Caetano de Bastos     Matrícula: 2010818
+Nome: João Quintella do Couto               Matrícula: 2010798
+
+*/
+
 public class DigestCalculator {
     // Calculate digest of a file
     private static String file_digest(String file_path, String tipo_digest) throws Exception {

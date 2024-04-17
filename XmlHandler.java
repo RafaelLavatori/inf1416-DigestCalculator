@@ -1,8 +1,8 @@
 /*
-Trabalho 2 inf1416 - DigestCalculator
+Trabalho 2 INF1416 - DigestCalculator
 
-Nome: Rafael Lavatori Caetano de Bastos  Matrícula: 2010818
-Nome: João Couto       Matrícula: 2010798
+Nome: Rafael Lavatori Caetano de Bastos     Matrícula: 2010818
+Nome: João Quintella do Couto               Matrícula: 2010798
 
 */
 
